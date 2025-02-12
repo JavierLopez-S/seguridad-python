@@ -1,0 +1,35 @@
+name: Security Scan  # Nombre del workflow
+
+on:
+  push:  # Se ejecutará cuando se haga un "push"
+  pull_request:  # También cuando se abra un "pull request"
+
+jobs:
+  security:  # Definimos un "job" llamado "security"
+    runs-on: ubuntu-latest  # Se ejecutará en un entorno de Linux
+
+    steps:
+      - name: Checkout code  # Paso 1: Descargar el código del repositorio
+        uses: actions/checkout@v3
+
+      - name: Set up Python  # Paso 2: Instalar Python en el entorno
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'  # Se usará la versión 3.9 de Python
+
+      - name: Install dependencies  # Paso 3: Instalar dependencias del proyecto
+        run: pip install -r requirements.txt
+
+      - name: Run Trivy vulnerability scan  # Paso 4: Escanear el código con Trivy
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'  # Escanear el sistema de archivos (código fuente)
+          ignore-unfixed: true  # Ignorar vulnerabilidades sin solución conocida
+          format: 'table'  # Formato de salida en tabla
+          output: 'trivy-results.txt'  # Guardar resultados en un archivo
+
+      - name: Upload Trivy results  # Paso 5: Guardar los resultados como artefacto
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-results
+          path: trivy-results.txt
